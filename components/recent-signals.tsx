@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUp, ArrowDown, Clock } from 'lucide-react'
+import { Clock } from 'lucide-react'
 
 const signals = [
   {

@@ -1,7 +1,53 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, AlertCircle, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    setSupabase(createClient())
+  }, [])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    if (!supabase) {
+      setError('Client not initialized')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        setError(signInError.message)
+        setLoading(false)
+        return
+      }
+
+      router.push('/dashboard')
+    } catch (err) {
+      setError('An unexpected error occurred')
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -20,13 +66,24 @@ export default function LoginPage() {
             Access your trading dashboard and live signals
           </p>
 
-          <form className="space-y-4">
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3 flex items-gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-500">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Email</label>
               <input
                 type="email"
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -35,7 +92,11 @@ export default function LoginPage() {
               <input
                 type="password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -44,6 +105,7 @@ export default function LoginPage() {
                 <input
                   type="checkbox"
                   className="rounded border-border"
+                  disabled={loading}
                 />
                 <span className="text-sm text-muted-foreground">Remember me</span>
               </label>
@@ -57,9 +119,11 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-primary px-4 py-2 font-semibold text-black hover:bg-blue-400 transition-colors"
+              disabled={loading}
+              className="w-full rounded-lg bg-primary px-4 py-2 font-semibold text-black hover:bg-blue-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Sign In
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
@@ -74,14 +138,13 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Social Login */}
-        <div className="mt-6 space-y-3">
-          <button className="w-full rounded-lg border border-border bg-secondary/5 px-4 py-2 font-medium text-foreground hover:bg-secondary/10 transition-colors">
-            Sign in with Google
-          </button>
-          <button className="w-full rounded-lg border border-border bg-secondary/5 px-4 py-2 font-medium text-foreground hover:bg-secondary/10 transition-colors">
-            Sign in with Microsoft
-          </button>
+        {/* Demo Credentials */}
+        <div className="mt-6 p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground">Demo Credentials:</strong><br />
+            Email: demo@example.com<br />
+            Password: Demo@12345
+          </p>
         </div>
       </div>
     </div>

@@ -1,7 +1,69 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { TrendingUp, Check } from 'lucide-react'
+import { TrendingUp, Check, AlertCircle, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [experience, setExperience] = useState('Beginner')
+  const [terms, setTerms] = useState(false)
+  const [error, setError] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    setSupabase(createClient())
+  }, [])
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (!terms) {
+      setError('Please accept the Terms of Service')
+      return
+    }
+
+    if (!supabase) {
+      setError('Client not initialized')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
+            `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: fullName,
+            experience_level: experience,
+          },
+        },
+      })
+
+      if (signUpError) {
+        setError(signUpError.message)
+        setLoading(false)
+        return
+      }
+
+      router.push('/auth/sign-up-success')
+    } catch (err) {
+      setError('An unexpected error occurred')
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
@@ -17,16 +79,27 @@ export default function SignupPage() {
         <div className="rounded-lg border bg-background p-8">
           <h1 className="mb-2 text-2xl font-bold text-foreground">Create Account</h1>
           <p className="mb-6 text-muted-foreground">
-            Start your free 7-day trial today
+            Start your free trading journey today
           </p>
 
-          <form className="space-y-4">
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3 flex items-gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-500">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSignup} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Full Name</label>
               <input
                 type="text"
                 placeholder="John Doe"
-                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -35,7 +108,11 @@ export default function SignupPage() {
               <input
                 type="email"
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -44,16 +121,25 @@ export default function SignupPage() {
               <input
                 type="password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors disabled:opacity-50"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                At least 8 characters with uppercase, lowercase, and numbers
+                At least 8 characters recommended
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Experience Level</label>
-              <select className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground outline-none focus:border-primary transition-colors">
+              <select
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+                disabled={loading}
+                className="w-full rounded-lg border border-border bg-secondary/20 px-4 py-2 text-foreground outline-none focus:border-primary transition-colors disabled:opacity-50"
+              >
                 <option>Beginner</option>
                 <option>Intermediate</option>
                 <option>Advanced</option>
@@ -64,6 +150,9 @@ export default function SignupPage() {
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
+                checked={terms}
+                onChange={(e) => setTerms(e.target.checked)}
+                disabled={loading}
                 className="rounded border-border"
               />
               <span className="text-sm text-muted-foreground">
@@ -76,9 +165,11 @@ export default function SignupPage() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-primary px-4 py-2 font-semibold text-black hover:bg-blue-400 transition-colors"
+              disabled={loading}
+              className="w-full rounded-lg bg-primary px-4 py-2 font-semibold text-black hover:bg-blue-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Create Account
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
@@ -95,7 +186,7 @@ export default function SignupPage() {
 
         {/* Benefits */}
         <div className="mt-8 rounded-lg border border-primary/30 bg-primary/5 p-4">
-          <h3 className="mb-3 font-semibold text-foreground">Free Trial Includes:</h3>
+          <h3 className="mb-3 font-semibold text-foreground">What You Get:</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-400" />
@@ -103,11 +194,11 @@ export default function SignupPage() {
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-400" />
-              Option chain analyzer
+              Stock screener
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-400" />
-              Stock screener
+              AI trading assistant
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-400" />
