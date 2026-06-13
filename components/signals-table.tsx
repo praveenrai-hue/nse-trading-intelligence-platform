@@ -22,14 +22,6 @@ export function SignalsTable() {
     )
   }
 
-  if (signals.length === 0) {
-    return (
-      <div className="rounded-lg border bg-secondary/5 p-12 text-center">
-        <p className="text-muted-foreground">No trading signals available at the moment.</p>
-      </div>
-    )
-  }
-
   return (
     <div className="overflow-x-auto rounded-lg border bg-background">
       <table className="w-full">
