@@ -21,7 +21,8 @@
 
 #### users
 - id (UUID, Primary Key)
-- email (VARCHAR, Unique)
+- email (VARCHAR, Unique, indexed)
+- password_hash (VARCHAR — bcrypt/argon2, NEVER store plaintext passwords)
 - full_name, phone
 - subscription_plan (basic, pro, premium, institutional)
 - subscription_status, subscription_start_date, subscription_end_date
