@@ -59,7 +59,9 @@ export default function SignupPage() {
 
       router.push('/auth/sign-up-success')
     } catch (err) {
-      setError('An unexpected error occurred')
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      console.error('[Signup] Unexpected error:', message)
+      setError(message)
       setLoading(false)
     }
   }

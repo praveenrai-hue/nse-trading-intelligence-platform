@@ -26,6 +26,7 @@ export async function GET() {
 
     return NextResponse.json(signals)
   } catch (error) {
+    console.error('[Saved Signals API] GET error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {
+    console.error('[Saved Signals API] POST error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -113,6 +115,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('[Saved Signals API] DELETE error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

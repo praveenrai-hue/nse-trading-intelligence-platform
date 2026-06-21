@@ -26,6 +26,7 @@ export async function GET() {
 
     return NextResponse.json(watchlist)
   } catch (error) {
+    console.error('[Watchlist API] GET error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(item, { status: 201 })
   } catch (error) {
+    console.error('[Watchlist API] POST error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -108,6 +110,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('[Watchlist API] DELETE error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

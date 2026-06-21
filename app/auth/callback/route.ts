@@ -12,7 +12,14 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }
+    console.error('[Auth Callback] Failed to exchange code for session:', error.message)
+    const errorUrl = new URL(`${origin}/auth/error`)
+    errorUrl.searchParams.set('reason', 'exchange_failed')
+    return NextResponse.redirect(errorUrl.toString())
   }
 
-  return NextResponse.redirect(`${origin}/auth/error`)
+  console.warn('[Auth Callback] No authorization code provided in callback')
+  const errorUrl = new URL(`${origin}/auth/error`)
+  errorUrl.searchParams.set('reason', 'missing_code')
+  return NextResponse.redirect(errorUrl.toString())
 }

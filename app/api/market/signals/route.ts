@@ -57,9 +57,13 @@ export async function POST(request: Request) {
 
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
+      if (authError) {
+        console.error('[Signals API] Auth error:', authError.message)
+      }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
