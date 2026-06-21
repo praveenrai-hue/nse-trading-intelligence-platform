@@ -13,6 +13,7 @@ export async function POST() {
     console.log('[Market Sync] Starting sync for', NSE_STOCKS.length, 'stocks')
 
     const results = []
+    const errors: { symbol: string; error: string }[] = []
 
     for (const stock of NSE_STOCKS) {
       try {
@@ -20,7 +21,9 @@ export async function POST() {
         const quote = await getStockQuote(stock.symbol)
 
         if (!quote) {
-          console.warn(`[Market Sync] Failed to fetch quote for ${stock.symbol}`)
+          const msg = `Failed to fetch quote for ${stock.symbol}`
+          console.warn(`[Market Sync] ${msg}`)
+          errors.push({ symbol: stock.symbol, error: msg })
           continue
         }
 
@@ -46,6 +49,7 @@ export async function POST() {
 
         if (marketDataError) {
           console.error(`[Market Sync] Error updating market_data for ${stock.symbol}:`, marketDataError)
+          errors.push({ symbol: stock.symbol, error: `market_data upsert: ${marketDataError.message}` })
         }
 
         // Calculate target and stop loss
@@ -93,6 +97,7 @@ export async function POST() {
 
         if (signalError) {
           console.error(`[Market Sync] Error updating live_signals for ${stock.symbol}:`, signalError)
+          errors.push({ symbol: stock.symbol, error: `live_signals upsert: ${signalError.message}` })
         }
 
         results.push({
@@ -104,15 +109,22 @@ export async function POST() {
           change: quote.changePercent,
         })
       } catch (error) {
-        console.error(`[Market Sync] Error processing ${stock.symbol}:`, error)
+        const msg = error instanceof Error ? error.message : String(error)
+        console.error(`[Market Sync] Error processing ${stock.symbol}:`, msg)
+        errors.push({ symbol: stock.symbol, error: msg })
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Synced ${results.length} stocks`,
-      results,
-    })
+    const hasErrors = errors.length > 0
+    return NextResponse.json(
+      {
+        success: !hasErrors,
+        message: `Synced ${results.length}/${NSE_STOCKS.length} stocks${hasErrors ? ` (${errors.length} failed)` : ''}`,
+        results,
+        ...(hasErrors && { errors }),
+      },
+      { status: hasErrors && results.length === 0 ? 500 : 200 }
+    )
   } catch (error) {
     console.error('[Market Sync] Error:', error)
     return NextResponse.json(

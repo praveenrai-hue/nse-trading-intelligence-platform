@@ -29,7 +29,14 @@ interface MarketData {
   updated_at: string
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`API request failed (${res.status}): ${body}`)
+  }
+  return res.json()
+}
 
 export function useSignals() {
   const { data, error, isLoading } = useSWR<{ signals: Signal[] }>(

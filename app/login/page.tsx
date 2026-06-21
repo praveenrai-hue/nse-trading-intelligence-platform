@@ -43,7 +43,9 @@ export default function LoginPage() {
 
       router.push('/dashboard')
     } catch (err) {
-      setError('An unexpected error occurred')
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      console.error('[Login] Unexpected error:', message)
+      setError(message)
       setLoading(false)
     }
   }

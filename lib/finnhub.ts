@@ -1,6 +1,13 @@
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1'
 
+function ensureApiKey(): string {
+  if (!FINNHUB_API_KEY) {
+    throw new Error('[Finnhub] FINNHUB_API_KEY environment variable is not set')
+  }
+  return FINNHUB_API_KEY
+}
+
 export interface StockQuote {
   symbol: string
   name: string
@@ -29,16 +36,23 @@ export interface CompanyProfile {
  */
 export async function getStockQuote(symbol: string): Promise<StockQuote | null> {
   try {
+    const apiKey = ensureApiKey()
     const response = await fetch(
-      `${FINNHUB_BASE_URL}/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`
+      `${FINNHUB_BASE_URL}/quote?symbol=${symbol}&token=${apiKey}`
     )
 
     if (!response.ok) {
-      console.error(`[Finnhub] Failed to fetch quote for ${symbol}:`, response.statusText)
+      const body = await response.text()
+      console.error(`[Finnhub] Failed to fetch quote for ${symbol}: ${response.status} ${response.statusText}`, body)
       return null
     }
 
     const data = await response.json()
+
+    if (data.c === undefined || data.c === null) {
+      console.warn(`[Finnhub] No price data returned for ${symbol}`, data)
+      return null
+    }
 
     return {
       symbol,
@@ -53,7 +67,7 @@ export async function getStockQuote(symbol: string): Promise<StockQuote | null> 
       volume: data.v || 0,
     }
   } catch (error) {
-    console.error(`[Finnhub] Error fetching quote for ${symbol}:`, error)
+    console.error(`[Finnhub] Error fetching quote for ${symbol}:`, error instanceof Error ? error.message : error)
     return null
   }
 }
@@ -63,12 +77,14 @@ export async function getStockQuote(symbol: string): Promise<StockQuote | null> 
  */
 export async function getCompanyProfile(symbol: string): Promise<CompanyProfile | null> {
   try {
+    const apiKey = ensureApiKey()
     const response = await fetch(
-      `${FINNHUB_BASE_URL}/stock/profile2?symbol=${symbol}&token=${FINNHUB_API_KEY}`
+      `${FINNHUB_BASE_URL}/stock/profile2?symbol=${symbol}&token=${apiKey}`
     )
 
     if (!response.ok) {
-      console.error(`[Finnhub] Failed to fetch profile for ${symbol}:`, response.statusText)
+      const body = await response.text()
+      console.error(`[Finnhub] Failed to fetch profile for ${symbol}: ${response.status} ${response.statusText}`, body)
       return null
     }
 
@@ -82,7 +98,7 @@ export async function getCompanyProfile(symbol: string): Promise<CompanyProfile 
       pe: data.pe,
     }
   } catch (error) {
-    console.error(`[Finnhub] Error fetching profile for ${symbol}:`, error)
+    console.error(`[Finnhub] Error fetching profile for ${symbol}:`, error instanceof Error ? error.message : error)
     return null
   }
 }

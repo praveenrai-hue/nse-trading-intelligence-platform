@@ -26,6 +26,7 @@ export async function GET() {
 
     return NextResponse.json(profile)
   } catch (error) {
+    console.error('[Profile API] GET error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -65,6 +66,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(profile)
   } catch (error) {
+    console.error('[Profile API] PUT error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
