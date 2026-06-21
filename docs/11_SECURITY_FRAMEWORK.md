@@ -18,14 +18,17 @@
 
 ### Multi-Factor Authentication (MFA)
 ```
-Primary: Email + Password
-Secondary: Google Authenticator / Authy
-Backup: SMS OTP (as fallback)
+Primary: Email + Password (bcrypt/argon2 hashed, min 12 chars)
+Secondary: TOTP via Google Authenticator / Authy
+Backup: One-time recovery codes (generated at MFA setup, stored hashed)
+
+Note: SMS OTP is NOT used as a fallback due to SIM-swapping risks.
 
 Enforcement:
 - Mandatory for all users
 - Grace period: 7 days
 - Timeout: 30 minutes inactivity
+- Account lockout: 5 failed attempts → 15-minute lockout
 ```
 
 ### JWT Token System
@@ -120,13 +123,18 @@ IP Whitelist: Optional
 
 ### CORS Policy
 ```
-Allowed Origins:
+Allowed Origins (explicit list, no wildcards):
 - https://app.niftysignals.com
-- https://*.niftysignals.com
+- https://admin.niftysignals.com
+- https://api.niftysignals.com
 
-Methods: GET, POST, PUT, DELETE
+Note: Wildcard subdomains (*.niftysignals.com) MUST NOT be used.
+      Subdomain takeover could grant an attacker full CORS access.
+
+Methods: GET, POST, PUT (DELETE restricted to admin-origin only)
 Headers: Standard + X-API-Key
 Credentials: Secure flag required
+Max-Age: 3600 (preflight cache)
 ```
 
 ---
@@ -156,11 +164,12 @@ Signing: Container image signing
 
 ### Input Validation
 ```
-- SQL Injection: Prepared statements
-- XSS: Input sanitization + CSP headers
-- CSRF: CSRF tokens
-- Command Injection: Input validation
-- Path Traversal: Path normalization
+- SQL Injection: Parameterized queries via ORM (Prisma) — raw SQL prohibited
+- XSS: Output encoding + CSP headers + DOMPurify for user-generated content
+- CSRF: Double-submit CSRF tokens (SameSite=Strict cookies)
+- Command Injection: No shell exec with user input; allowlist-based validation
+- Path Traversal: Path normalization + chroot-style path validation
+- Mass Assignment: Explicit allowlists on all request body parsers
 ```
 
 ### Security Headers

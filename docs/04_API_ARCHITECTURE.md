@@ -16,10 +16,15 @@
 
 ## 2. Authentication Endpoints
 
+**Rate Limit:** 10 requests/minute per IP (brute-force protection)
+**Validation:** All inputs sanitized and validated server-side
+
 ### POST /auth/register
 Register new user
 ```
 Request: { email, password, full_name }
+  - password: min 12 chars, 1 uppercase, 1 number, 1 special char
+  - email: validated format + disposable-email blocklist
 Response: { user_id, email, token }
 ```
 
@@ -28,6 +33,7 @@ Login with credentials
 ```
 Request: { email, password }
 Response: { user_id, token, refresh_token }
+Security: Account lockout after 5 failed attempts (15-min cooldown)
 ```
 
 ### POST /auth/google-login
@@ -266,21 +272,27 @@ Response: { subscription_id }
 
 ## 10. Admin Endpoints
 
+**Authorization:** Requires `role: admin` in JWT. All requests pass through `adminAuthMiddleware`.
+**Audit:** Every admin API call is logged to `audit_logs` table.
+
 ### GET /admin/users
 Get all users (Admin only)
 ```
+Middleware: [authMiddleware, adminAuthMiddleware, auditLogger]
 Response: [{ user_id, email, subscription_plan }]
 ```
 
 ### GET /admin/signals/performance
 Get signal performance (Admin only)
 ```
+Middleware: [authMiddleware, adminAuthMiddleware, auditLogger]
 Response: { total_signals, win_rate }
 ```
 
 ### GET /admin/revenue/metrics
 Get revenue metrics (Admin only)
 ```
+Middleware: [authMiddleware, adminAuthMiddleware, auditLogger]
 Response: { mrr, arr, churn_rate }
 ```
 
@@ -288,23 +300,36 @@ Response: { mrr, arr, churn_rate }
 
 ## 11. WebSocket Endpoints
 
+**Authentication:** All WS connections require a valid JWT token passed
+in the initial handshake (`?token=<jwt>` query param or `Authorization` header).
+Unauthenticated connections are rejected with WS close code 4401.
+
+**Rate Limit:** Max 5 subscribe messages/second per connection.
+**Idle Timeout:** Connections idle >5 min are closed with close code 4408.
+
 ### WS /ws/market-data
 Real-time market data
 ```
+Handshake: wss://api.example.com/ws/market-data?token=<JWT>
 Message: { type: "subscribe", symbols: ["TCS"] }
 Response: { symbol, price, change }
+Auth: Required (Free tier: max 5 symbols, Premium: unlimited)
 ```
 
 ### WS /ws/signals
-Real-time signals
+Real-time signals (Premium+ only)
 ```
+Handshake: wss://api.example.com/ws/signals?token=<JWT>
 Response: { signal_id, asset, entry }
+Auth: Required (Premium or Institutional subscription)
 ```
 
 ### WS /ws/options-chain
-Real-time options updates
+Real-time options updates (Premium+ only)
 ```
+Handshake: wss://api.example.com/ws/options-chain?token=<JWT>
 Response: { contract, price, iv, greeks }
+Auth: Required (Premium or Institutional subscription)
 ```
 
 ---

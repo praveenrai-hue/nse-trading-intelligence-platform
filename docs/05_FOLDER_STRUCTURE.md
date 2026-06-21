@@ -437,7 +437,7 @@ nse-trading-intelligence-platform/
 │   │   ├── Dockerfile
 │   │   └── docker-compose.yml
 │   │
-│   └── .env.server
+│   └── .env.server (git ignored — MUST NOT be committed)
 │
 ├── public/                         # Static Assets
 │   ├── images/

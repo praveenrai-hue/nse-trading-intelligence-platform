@@ -87,9 +87,9 @@ Deploy Stage (3-5 min):
 
 ### PostgreSQL (Supabase)
 ```
-Primary: db.nifty-prod.supabase.co
-Read Replica 1: db.nifty-read1.supabase.co
-Read Replica 2: db.nifty-read2.supabase.co
+Primary: <SUPABASE_PRIMARY_HOST> (stored in secrets manager)
+Read Replica 1: <SUPABASE_READ_REPLICA_1_HOST> (stored in secrets manager)
+Read Replica 2: <SUPABASE_READ_REPLICA_2_HOST> (stored in secrets manager)
 
 Replication: Synchronous
 Failover: Automatic
@@ -122,9 +122,10 @@ Production:
 
 Staging:
 - Similar to production
-- Staging credentials
+- Staging credentials (separate from production, stored in secrets manager)
 - Lower resource limits
-- Debug logging enabled
+- Structured logging (no debug-level in internet-facing services)
+- Sensitive fields redacted from logs
 ```
 
 ---
