@@ -47,9 +47,12 @@ export async function POST() {
             { onConflict: 'symbol' }
           )
 
+        let stockFailed = false
+
         if (marketDataError) {
           console.error(`[Market Sync] Error updating market_data for ${stock.symbol}:`, marketDataError)
           errors.push({ symbol: stock.symbol, error: `market_data upsert: ${marketDataError.message}` })
+          stockFailed = true
         }
 
         // Calculate target and stop loss
@@ -98,16 +101,19 @@ export async function POST() {
         if (signalError) {
           console.error(`[Market Sync] Error updating live_signals for ${stock.symbol}:`, signalError)
           errors.push({ symbol: stock.symbol, error: `live_signals upsert: ${signalError.message}` })
+          stockFailed = true
         }
 
-        results.push({
-          symbol: stock.symbol,
-          name: stock.name,
-          signal: signal.type,
-          confidence: signal.confidence,
-          price: currentPrice,
-          change: quote.changePercent,
-        })
+        if (!stockFailed) {
+          results.push({
+            symbol: stock.symbol,
+            name: stock.name,
+            signal: signal.type,
+            confidence: signal.confidence,
+            price: currentPrice,
+            change: quote.changePercent,
+          })
+        }
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
         console.error(`[Market Sync] Error processing ${stock.symbol}:`, msg)
@@ -116,10 +122,11 @@ export async function POST() {
     }
 
     const hasErrors = errors.length > 0
+    const failedCount = new Set(errors.map((e) => e.symbol)).size
     return NextResponse.json(
       {
         success: !hasErrors,
-        message: `Synced ${results.length}/${NSE_STOCKS.length} stocks${hasErrors ? ` (${errors.length} failed)` : ''}`,
+        message: `Synced ${results.length}/${NSE_STOCKS.length} stocks${hasErrors ? ` (${failedCount} failed)` : ''}`,
         results,
         ...(hasErrors && { errors }),
       },
