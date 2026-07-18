@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 class Settings(BaseSettings):
@@ -21,11 +25,12 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     environment: str = Field(default="development", alias="ENVIRONMENT")
 
-    cors_origins: list[str] = Field(default=["http://localhost:3000"], alias="CORS_ORIGINS")
-
-    index_symbols: list[str] = Field(default=["NIFTY", "BANKNIFTY", "FINNIFTY"], alias="INDEX_SYMBOLS")
-    stock_symbols: list[str] = Field(
-        default=["RELIANCE", "HDFCBANK", "INFY", "TCS", "ICICIBANK"], alias="STOCK_SYMBOLS"
+    # Stored as raw comma-separated strings so env vars like CORS_ORIGINS="*"
+    # are not JSON-decoded by pydantic-settings; exposed as lists via properties.
+    cors_origins_raw: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
+    index_symbols_raw: str = Field(default="NIFTY,BANKNIFTY,FINNIFTY", alias="INDEX_SYMBOLS")
+    stock_symbols_raw: str = Field(
+        default="RELIANCE,HDFCBANK,INFY,TCS,ICICIBANK", alias="STOCK_SYMBOLS"
     )
 
     nse_base_url: str = Field(default="https://www.nseindia.com", alias="NSE_BASE_URL")
@@ -36,12 +41,17 @@ class Settings(BaseSettings):
     refresh_interval_seconds: int = Field(default=30, alias="REFRESH_INTERVAL_SECONDS")
     use_mock_nse: bool = Field(default=True, alias="USE_MOCK_NSE")
 
-    @field_validator("cors_origins", "index_symbols", "stock_symbols", mode="before")
-    @classmethod
-    def _split_csv(cls, value: object) -> object:
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return value
+    @property
+    def cors_origins(self) -> list[str]:
+        return _split_csv(self.cors_origins_raw)
+
+    @property
+    def index_symbols(self) -> list[str]:
+        return _split_csv(self.index_symbols_raw)
+
+    @property
+    def stock_symbols(self) -> list[str]:
+        return _split_csv(self.stock_symbols_raw)
 
     @property
     def all_symbols(self) -> list[str]:
