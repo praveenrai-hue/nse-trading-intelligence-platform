@@ -1,0 +1,23 @@
+[project]
+name = "nse-smart-money-backend"
+version = "0.1.0"
+description = "NSE Options Intelligence + Smart Money Analysis backend (FastAPI + PostgreSQL)"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 110
+extend-exclude = ["alembic/versions"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
