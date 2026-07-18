@@ -6,6 +6,30 @@ An advanced, multi-agent AI-powered platform for NSE Equity, F&O, and Options ma
 
 ---
 
+## ✅ Implemented: Options Intelligence + Smart Money Scanner
+
+A runnable **NSE Options Intelligence Scanner + Smart Money Analysis** platform
+is now included in this repo:
+
+- **`backend/`** — Python **FastAPI** + **PostgreSQL** (SQLAlchemy/Alembic).
+  Live/mock NSE option-chain ingestion, option analytics (OI, Change in OI,
+  build-up/unwinding, Call/Put writing, PCR, Max Pain, ATM OI concentration),
+  smart-money detectors (market structure HH/HL/LH/LL, BOS, CHoCH, liquidity
+  sweeps, FVG, order blocks, volume imbalance, volatility compression, range
+  breakouts), and a combined Bullish/Bearish/Confidence + Structure/Liquidity/
+  Smart-Money scoring engine. REST + WebSocket endpoints.
+- **`frontend/`** — mobile-first **Next.js/React** dashboard with a colour-coded
+  scanner table (green/red/yellow, 30s auto-refresh), per-symbol detail view and
+  a price chart with smart-money overlays.
+
+> Note: this implementation uses **FastAPI + PostgreSQL + Next.js** per the
+> latest requirements, which differs from the Node.js/Supabase blueprint
+> described in the older `/docs` specs. See
+> **[docs/18_SMART_MONEY_FEATURES.md](./docs/18_SMART_MONEY_FEATURES.md)** and
+> **[SETUP.md](./SETUP.md)** to run the full stack (`docker compose up --build`).
+
+---
+
 ## 📋 Project Overview
 
 **Platform Purpose:**
