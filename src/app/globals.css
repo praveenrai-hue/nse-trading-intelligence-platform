@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 3%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 98%;
+  --muted: 0 0% 30%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 280 85% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 20%;
+  --input: 0 0% 15%;
+  --ring: 280 85% 50%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 0 0% 3%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 98%;
+  --muted: 0 0% 30%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 280 85% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 20%;
+  --input: 0 0% 15%;
+  --ring: 280 85% 50%;
+}
+
+body {
+  background: linear-gradient(to bottom right, #0f172a, #2e1065, #0f172a);
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+* {
+  @apply border-border;
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+a {
+  @apply text-accent hover:underline;
+}
